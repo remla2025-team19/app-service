@@ -34,7 +34,8 @@ jobs:
                 context: .
                 push: true
                 tags: |
-                  ${{ env.IMG_NAME }}:${{ steps.semver.outputs.version }}
+                  ${{ env.IMG_NAME }}:${{ steps.semver.outputs.full }}
+                  ${{ env.IMG_NAME }}:${{ steps.semver.outputs.major }}.${{ steps.semver.outputs.minor }}.${{ steps.semver.outputs.patch }}
                   ${{ env.IMG_NAME }}:${{ steps.semver.outputs.major }}.${{ steps.semver.outputs.minor }}.latest
                   ${{ env.IMG_NAME }}:${{ steps.semver.outputs.major }}.latest
                   ${{ env.IMG_NAME }}:latest
