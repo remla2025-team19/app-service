@@ -23,13 +23,18 @@ jobs:
             - name: Parse version from tag
               id: semver
               uses: release-kit/semver@v2
+            - name: Set lowercased repository name
+              run: |
+                IMG="ghcr.io/${{github.repository}}"
+                IMG=${IMG@L}
+                echo "IMG_NAME=$IMG" >> $GITHUB_ENV
             - name: Build and push Docker image
               uses: docker/build-push-action@v5
               with:
                 context: .
                 push: true
                 tags: |
-                  ghcr.io/${{ github.repository,, }}:${{ steps.semver.outputs.version }}
-                  ghcr.io/${{ github.repository,, }}:${{ steps.semver.outputs.major }}.${{ steps.semver.outputs.minor }}.latest
-                  ghcr.io/${{ github.repository,, }}:${{ steps.semver.outputs.major }}.latest
-                  ghcr.io/${{ github.repository,, }}:latest
+                  ${{ env.IMG_NAME }}:${{ steps.semver.outputs.version }}
+                  ${{ env.IMG_NAME }}:${{ steps.semver.outputs.major }}.${{ steps.semver.outputs.minor }}.latest
+                  ${{ env.IMG_NAME }}:${{ steps.semver.outputs.major }}.latest
+                  ${{ env.IMG_NAME }}:latest
