@@ -1,23 +1,36 @@
 # syntax=docker/dockerfile:1
 
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/engine/reference/builder/
-
 ARG PYTHON_VERSION=3.12.9
-FROM python:${PYTHON_VERSION}-slim as base
+
+# ---- Builder Stage ----
+FROM python:${PYTHON_VERSION}-slim as builder
+
+# Set up virtual environment
+ENV VIRTUAL_ENV=/opt/venv
+RUN python -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Install dependencies
+WORKDIR /app
+COPY requirements.txt .
+# Using --no-cache-dir is often good practice in multi-stage builds
+# to ensure no pip cache bloats the layer we copy from.
+RUN pip install --no-cache-dir -r requirements.txt
+
+# ---- Final Stage ----
+FROM python:${PYTHON_VERSION}-slim as final
 
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
-
-# Keeps Python from buffering stdout and stderr to avoid situations where
-# the application crashes without emitting any logs due to buffering.
+# Keeps Python from buffering stdout and stderr.
 ENV PYTHONUNBUFFERED=1
+# Set up path to use the virtual environment
+ENV VIRTUAL_ENV=/opt/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 WORKDIR /app
 
-# Create a non-privileged user that the app will run under.
-# See https://docs.docker.com/go/dockerfile-user-best-practices/
+# Create a non-privileged user
 ARG UID=10001
 RUN adduser \
     --disabled-password \
@@ -28,23 +41,20 @@ RUN adduser \
     --uid "${UID}" \
     appuser
 
-# Download dependencies as a separate step to take advantage of Docker's caching.
-# Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
-# Leverage a bind mount to requirements.txt to avoid having to copy them into
-# into this layer.
-RUN --mount=type=cache,target=/root/.cache/pip \
-    --mount=type=bind,source=requirements.txt,target=requirements.txt \
-    python -m pip install -r requirements.txt
+# Copy the virtual environment from the builder stage
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-# Switch to the non-privileged user to run the application.
-USER appuser
-
-# Copy the source code into the container.
+# Copy the application code
+# Ensure you have a .dockerignore file to exclude unnecessary files!
 COPY . .
 
-# Expose the port that the application listens on.
-EXPOSE 8080
+# Change ownership of the app directory to the app user
+RUN chown -R appuser:appuser /app
 
-# Run the application.
+# Switch to the non-privileged user
+USER appuser
+
+# Expose the port and define the runtime command
+EXPOSE 8080
 ENTRYPOINT [ "python" ]
 CMD [ "server.py" ]
