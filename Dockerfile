@@ -10,9 +10,14 @@ ENV VIRTUAL_ENV=/opt/venv
 RUN python -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
+# Install uv
+RUN pip install uv
+
 # Install dependencies
 WORKDIR /app
-COPY requirements.txt .
+COPY pyproject.toml .
+# Generate requirements.txt from pyproject.toml
+RUN uv export --output-file requirements.txt
 # Using --no-cache-dir is often good practice in multi-stage builds
 # to ensure no pip cache bloats the layer we copy from.
 RUN pip install --no-cache-dir -r requirements.txt
