@@ -10,6 +10,7 @@ dependencies = [
     { name = "flasgger" },
     { name = "flask" },
     { name = "flask-cors" },
+    { name = "lib-version" },
 ]
 
 [package.metadata]
@@ -17,6 +18,7 @@ requires-dist = [
     { name = "flasgger", specifier = "==0.9.7.1" },
     { name = "flask", specifier = "==3.1.0" },
     { name = "flask-cors", specifier = ">=5.0.1" },
+    { name = "lib-version", git = "https://github.com/remla2025-team19/lib-version" },
 ]
 
 [[package]]
@@ -148,6 +150,11 @@ sdist = { url = "https://files.pythonhosted.org/packages/bf/ce/46fbd9c8119cfc358
 wheels = [
     { url = "https://files.pythonhosted.org/packages/01/0e/b27cdbaccf30b890c40ed1da9fd4a3593a5cf94dae54fb34f8a4b74fcd3f/jsonschema_specifications-2025.4.1-py3-none-any.whl", hash = "sha256:4653bffbd6584f7de83a67e0d620ef16900b390ddc7939d56684d6c81e33f1af", size = 18437, upload-time = "2025-04-23T12:34:05.422Z" },
 ]
+
+[[package]]
+name = "lib-version"
+version = "0.1.0"
+source = { git = "https://github.com/remla2025-team19/lib-version#6fc1a5696a5365424e1fca3e071c0b8024c45b83" }
 
 [[package]]
 name = "markupsafe"

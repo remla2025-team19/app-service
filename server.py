@@ -4,6 +4,7 @@ from flasgger import Swagger
 from flask_cors import CORS
 import requests
 import urllib
+from lib_version import VersionUtil
 
 
 app = Flask(__name__)
@@ -50,7 +51,8 @@ def get_version():
     # TODO: import lib-version
     return {
         "app_version": VersionUtil.get_version(),
-        "model_service_version": model_service_version,
+        # TODO: fix this
+        "model_service_version": "v0.0.1",
     }
 
 

@@ -4,4 +4,12 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = "==3.12.9"
-dependencies = ["flasgger==0.9.7.1", "flask==3.1.0", "flask-cors>=5.0.1"]
+dependencies = [
+    "flasgger==0.9.7.1",
+    "flask==3.1.0",
+    "flask-cors>=5.0.1",
+    "lib-version",
+]
+
+[tool.uv.sources]
+lib-version = { git = "https://github.com/remla2025-team19/lib-version" }
