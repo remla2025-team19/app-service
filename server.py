@@ -44,10 +44,10 @@ def get_version():
     """
 
     # TODO: update url
-    url = urllib.parse.urljoin(MODEL_SERVICE_URL, "api/version")
-    response = requests.get(url)
-    # TODO: update parameter
-    model_service_version = response.json().get("version")
+    # url = urllib.parse.urljoin(MODEL_SERVICE_URL, "api/version")
+    # response = requests.get(url)
+    # # TODO: update parameter
+    # model_service_version = response.json().get("version")
     # TODO: import lib-version
     return {
         "appVersion": VersionUtil.get_version(),
