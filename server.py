@@ -84,7 +84,9 @@ def query_model():
     review = request.get_json().get("review")
     url = urllib.parse.urljoin(MODEL_SERVICE_URL, "predict")
     data = {"review": review}
-    response = requests.post(url, json=data)
+    headers = {"Content-Type": "application/json"}
+    print(f"Sending request to {url} with data: {data}")
+    response = requests.post(url, json=data, headers=headers)
     sentiment = response.json().get("result")
 
     return jsonify({"sentiment": sentiment})
