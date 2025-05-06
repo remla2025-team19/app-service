@@ -1,10 +1,28 @@
-from flask import Flask, jsonify, request
+import os
+from flask import Flask, jsonify, request, send_from_directory
 from flasgger import Swagger
 from flask_cors import CORS
+import requests
+import urllib
+
 
 app = Flask(__name__)
 CORS(app)
 swagger = Swagger(app)
+
+
+MODEL_SERVICE_URL = os.getenv("MODEL_SERVICE_URL")
+if MODEL_SERVICE_URL is None:
+    raise ValueError("MODEL_SERVICE_URL is not set")
+
+
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve_frontend(path):
+    if path != "" and os.path.exists(os.path.join("frontend/dist", path)):
+        return send_from_directory("frontend/dist", path)
+    else:
+        return send_from_directory("frontend/dist", "index.html")
 
 
 @app.route("/api/version", methods=["GET"])
@@ -18,11 +36,22 @@ def get_version():
         schema:
           type: object
           properties:
-            version:
+            app_version:
+              type: string
+            model_service_version:
               type: string
     """
-    # TODO: use lib-version
-    return {"version": "0.1.0"}
+
+    # TODO: update url
+    url = urllib.parse.urljoin(MODEL_SERVICE_URL, "/api/version")
+    response = requests.get(url)
+    # TODO: update parameter
+    model_service_version = response.json().get("version")
+    # TODO: import lib-version
+    return {
+        "app_version": VersionUtil.get_version(),
+        "model_service_version": model_service_version,
+    }
 
 
 @app.route("/api/query", methods=["POST"])
@@ -44,15 +73,28 @@ def query_model():
       200:
         description: The response from the model-service
         schema:
-          type: string
+          type: object
+          properties:
+            sentiment:
+              type: string
     """
-    # TODO: query model-service
+
     query = request.get_json().get("query")
-    return jsonify({"sentiment": query})
+    # TODO: update url
+    url = urllib.parse.urljoin(MODEL_SERVICE_URL, "/api/query")
+    # TODO: update body
+    data = {"query": query}
+
+    response = requests.post(url, json=data)
+
+    # TODO: update parameter
+    sentiment = response.json().get("sentiment")
+
+    return jsonify({"sentiment": sentiment})
 
 
 app.run(
     host="0.0.0.0",
     port=8080,
-    debug=True,
+    debug=True,  # TODO: run in release mode
 )
