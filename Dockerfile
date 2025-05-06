@@ -4,7 +4,7 @@ ARG PYTHON_VERSION=3.12.9
 ARG NODE_VERSION=20
 
 # ---- Python Builder Stage ----
-FROM python:${PYTHON_VERSION}-slim as python-builder
+FROM python:${PYTHON_VERSION}-slim AS python-builder
 
 # Install git
 RUN apt-get update && apt-get install -y git && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -28,7 +28,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 
 # ---- Frontend Builder Stage ----
-FROM node:${NODE_VERSION}-alpine as frontend-builder
+FROM node:${NODE_VERSION}-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
@@ -47,7 +47,7 @@ RUN npm run build
 
 
 # ---- Final Stage ----
-FROM python:${PYTHON_VERSION}-slim as final
+FROM python:${PYTHON_VERSION}-slim AS final
 
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
