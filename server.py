@@ -60,13 +60,13 @@ def query_model():
     ---
     description: Query the model-service
     parameters:
-      - name: query
+      - name: review
         in: body
         required: true
         schema:
           type: object
           properties:
-            query:
+            review:
               type: string
 
     responses:
@@ -79,15 +79,10 @@ def query_model():
               type: string
     """
 
-    query = request.get_json().get("query")
-    # TODO: update url
-    url = urllib.parse.urljoin(MODEL_SERVICE_URL, "/api/query")
-    # TODO: update body
-    data = {"query": query}
-
+    review = request.get_json().get("review")
+    url = urllib.parse.urljoin(MODEL_SERVICE_URL, "/predict")
+    data = {"review": review}
     response = requests.post(url, json=data)
-
-    # TODO: update parameter
     sentiment = response.json().get("sentiment")
 
     return jsonify({"sentiment": sentiment})
