@@ -85,7 +85,7 @@ def query_model():
     url = urllib.parse.urljoin(MODEL_SERVICE_URL, "predict")
     data = {"review": review}
     response = requests.post(url, json=data)
-    sentiment = response.json().get("sentiment")
+    sentiment = response.json().get("result")
 
     return jsonify({"sentiment": sentiment})
 
