@@ -9,6 +9,7 @@ dependencies = [
     "flask==3.1.0",
     "flask-cors>=5.0.1",
     "lib-version",
+    "requests>=2.32.3",
 ]
 
 [tool.uv.sources]
