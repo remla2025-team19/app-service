@@ -44,15 +44,15 @@ def get_version():
     """
 
     # TODO: update url
-    url = urllib.parse.urljoin(MODEL_SERVICE_URL, "/api/version")
+    url = urllib.parse.urljoin(MODEL_SERVICE_URL, "api/version")
     response = requests.get(url)
     # TODO: update parameter
     model_service_version = response.json().get("version")
     # TODO: import lib-version
     return {
-        "app_version": VersionUtil.get_version(),
+        "appVersion": VersionUtil.get_version(),
         # TODO: fix this
-        "model_service_version": "v0.0.1",
+        "modelServiceVersion": "0.0.1",
     }
 
 
@@ -82,7 +82,7 @@ def query_model():
     """
 
     review = request.get_json().get("review")
-    url = urllib.parse.urljoin(MODEL_SERVICE_URL, "/predict")
+    url = urllib.parse.urljoin(MODEL_SERVICE_URL, "predict")
     data = {"review": review}
     response = requests.post(url, json=data)
     sentiment = response.json().get("sentiment")
