@@ -6,6 +6,11 @@ readme = "README.md"
 requires-python = "==3.12.9"
 dependencies = [
     "flasgger==0.9.7.1",
- "flask==3.1.0",
- "flask-cors>=5.0.1",
+    "flask==3.1.0",
+    "flask-cors>=5.0.1",
+    "lib-version",
+    "requests>=2.32.3",
 ]
+
+[tool.uv.sources]
+lib-version = { git = "https://github.com/remla2025-team19/lib-version" }
