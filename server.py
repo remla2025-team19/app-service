@@ -81,7 +81,8 @@ def query_model():
               type: string
     """
 
-    review = request.get_json().get("review")
+    request_data= request.get_json(force=True)
+    review = request_data.get("query")
     url = urllib.parse.urljoin(MODEL_SERVICE_URL, "predict")
     data = {"review": review}
     headers = {"Content-Type": "application/json"}
