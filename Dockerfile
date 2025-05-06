@@ -5,6 +5,9 @@ ARG PYTHON_VERSION=3.12.9
 # ---- Builder Stage ----
 FROM python:${PYTHON_VERSION}-slim as builder
 
+# Install git
+RUN apt-get update && apt-get install -y git && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # Set up virtual environment
 ENV VIRTUAL_ENV=/opt/venv
 RUN python -m venv $VIRTUAL_ENV
@@ -17,7 +20,7 @@ RUN pip install uv
 WORKDIR /app
 COPY pyproject.toml .
 # Generate requirements.txt from pyproject.toml
-RUN uv export --output-file requirements.txt
+RUN uv export --no-hashes --output-file requirements.txt
 # Using --no-cache-dir is often good practice in multi-stage builds
 # to ensure no pip cache bloats the layer we copy from.
 RUN pip install --no-cache-dir -r requirements.txt
