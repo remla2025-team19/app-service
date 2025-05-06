@@ -1,0 +1,42 @@
+name: Release
+on:
+    push:
+        tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+jobs:
+    build:
+        runs-on: ubuntu-24.04
+        steps:
+            - name: Checkout Repo
+              uses: actions/checkout@v4
+              with:
+                  submodules: recursive
+            - name: Docker login
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{github.actor}}
+                  password: ${{secrets.GH_TOKEN}}
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v3
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+            - name: Parse version from tag
+              id: semver
+              uses: release-kit/semver@v2
+            - name: Set lowercased repository name
+              run: |
+                IMG="ghcr.io/${{github.repository}}"
+                IMG=${IMG@L}
+                echo "IMG_NAME=$IMG" >> $GITHUB_ENV
+            - name: Build and push Docker image
+              uses: docker/build-push-action@v5
+              with:
+                context: .
+                push: true
+                platforms: linux/amd64,linux/arm64
+                tags: |
+                  ${{ env.IMG_NAME }}:${{ steps.semver.outputs.full }}
+                  ${{ env.IMG_NAME }}:${{ steps.semver.outputs.major }}.${{ steps.semver.outputs.minor }}.${{ steps.semver.outputs.patch }}
+                  ${{ env.IMG_NAME }}:${{ steps.semver.outputs.major }}.${{ steps.semver.outputs.minor }}.latest
+                  ${{ env.IMG_NAME }}:${{ steps.semver.outputs.major }}.latest
+                  ${{ env.IMG_NAME }}:latest
