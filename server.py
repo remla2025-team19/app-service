@@ -1,15 +1,20 @@
 import os
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, Response
 from flasgger import Swagger
 from flask_cors import CORS
 import requests
 import urllib
-from lib_version import VersionUtil
+from lib_version.versionuntil.version_until import VersionUtil
+from prometheus_client import Counter, Gauge, Summary, generate_latest, CONTENT_TYPE_LATEST
+
 
 
 app = Flask(__name__)
 CORS(app)
 swagger = Swagger(app)
+
+#Counter
+REQUEST_COUNT = Counter("app_requests_total", "Total number of app requests")
 
 
 MODEL_SERVICE_URL = os.getenv("MODEL_SERVICE_URL")
@@ -80,6 +85,8 @@ def query_model():
             sentiment:
               type: string
     """
+    #incrementing counter everytime invoked
+    REQUEST_COUNT.inc()
 
     review = request.get_json().get("review")
     url = urllib.parse.urljoin(MODEL_SERVICE_URL, "predict")
@@ -90,6 +97,18 @@ def query_model():
     sentiment = response.json().get("result")
 
     return jsonify({"sentiment": sentiment})
+
+@app.route("/metrics")
+def metrics():
+    """
+    ---
+    description: Get the metrics of the service
+    responses:
+      200:
+        description: The metrics of the service
+    """
+    #prometheus client lib - gathering registered metrics
+    return generate_latest(), 200, {"Content-Type": CONTENT_TYPE_LATEST}
 
 
 app.run(
