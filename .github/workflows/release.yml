@@ -20,23 +20,66 @@ jobs:
               uses: docker/setup-qemu-action@v3
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
-            - name: Parse version from tag
-              id: semver
-              uses: release-kit/semver@v2
-            - name: Set lowercased repository name
+            - name: Parse version info from tag
               run: |
+                # GITHUB_REF is like refs/tags/v2.3.5, so strip the first 11 chars
+                VERSION=${GITHUB_REF:11}
+
+                # Check if this is a pre-release
+                if [[ "$VERSION" == *-pre* ]]; then
+                  IS_PRE_RELEASE=true
+                else
+                  IS_PRE_RELEASE=false
+                fi
+
+                # Extract base version (without pre-release suffix)
+                BASE_VERSION=$(echo "$VERSION" | cut -d'-' -f1)
+                MAJOR=$(echo "$VERSION" | cut -d . -f 1)
+                MINOR=$(echo "$VERSION" | cut -d . -f 2)
+                PATCH=$(echo "$VERSION" | cut -d . -f 3)
+                echo "version=$VERSION" >> $GITHUB_ENV
+                echo "version_major=$MAJOR" >> $GITHUB_ENV
+                echo "version_minor=$MINOR" >> $GITHUB_ENV
+                echo "version_patch=$PATCH" >> $GITHUB_ENV
+                echo "is_prerelease=$IS_PRE_RELEASE" >> $GITHUB_ENV
+
+                # Lowercase image name
                 IMG="ghcr.io/${{github.repository}}"
                 IMG=${IMG@L}
-                echo "IMG_NAME=$IMG" >> $GITHUB_ENV
-            - name: Build and push Docker image
+                echo "image=$IMG" >> $GITHUB_ENV
+
+            - name: Build and push
               uses: docker/build-push-action@v5
               with:
                 context: .
+                platforms: linux/amd64, linux/arm64
                 push: true
-                platforms: linux/amd64,linux/arm64
                 tags: |
-                  ${{ env.IMG_NAME }}:${{ steps.semver.outputs.full }}
-                  ${{ env.IMG_NAME }}:${{ steps.semver.outputs.major }}.${{ steps.semver.outputs.minor }}.${{ steps.semver.outputs.patch }}
-                  ${{ env.IMG_NAME }}:${{ steps.semver.outputs.major }}.${{ steps.semver.outputs.minor }}.latest
-                  ${{ env.IMG_NAME }}:${{ steps.semver.outputs.major }}.latest
-                  ${{ env.IMG_NAME }}:latest
+                  ${{env.image}}:${{ env.version }} 
+                  ${{env.image}}:${{ env.version_major }}.${{ env.version_minor }}.latest 
+                  ${{env.image}}:${{ env.version_major }}.latest 
+                  ${{env.image}}:latest 
+                
+                cache-from: type=gha
+                cache-to: type=gha, mode=max
+                build-args: |
+                  VERSION=${{env.version}}
+
+            - name: Create Github Release
+              if: env.is_prerelease == 'false'
+              uses: actions/create-release@v1
+              env:
+                GITHUB_TOKEN: ${{secrets.GH_TOKEN}}
+              with:
+                tag_name: ${{env.version}}
+                release_name: Release ${{env.version}}
+                draft: false
+                prerelease: false
+
+            - name: Upload major version tag
+              if: env.is_prerelease == 'false'
+              run: |
+                git config user.name github-actions
+                git config user.email github-actions@github.com
+                git tag -fa ${{env.version_major}} -m "Update ${{env.version_major}} tag"
+                git push origin ${{env.version_major}} --force
