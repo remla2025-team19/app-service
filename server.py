@@ -138,6 +138,8 @@ def query_model():
     response = requests.post(url, json=data, headers=headers)
     sentiment = response.json().get("result")
 
+    # Track prediction of results
+    PREDICTION_REQUESTS.labels(sentiment_result=sentiment).inc()
     return jsonify({"sentiment": sentiment})
 
 
