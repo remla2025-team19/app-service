@@ -4,6 +4,8 @@ from flasgger import Swagger
 from flask_cors import CORS
 import requests
 import urllib
+from prometheus_client import Counter, Gauge, Histogram, generate_latest, CONTENT_TYPE_LATEST
+import time
 from lib_version import VersionUtil
 
 
@@ -15,6 +17,53 @@ swagger = Swagger(app)
 MODEL_SERVICE_URL = os.getenv("MODEL_SERVICE_URL")
 if MODEL_SERVICE_URL is None:
     raise ValueError("MODEL_SERVICE_URL is not set")
+
+# Custom Prometheus Metrics
+REQUEST_COUNT = Counter(
+    'sentiment_app_requests_total',
+    'Total number of requests to sentiment app',
+    ['method', 'endpoint', 'status_code']
+)
+
+ACTIVE_USERS = Gauge(
+    'sentiment_app_active_users',
+    'Number of currently active users'
+)
+
+PREDICTION_REQUESTS = Counter(
+    'sentiment_app_predictions_total',
+    'Total number of prediction requests',
+    ['sentiment_result']
+)
+REQUEST_DURATION = Histogram(
+    'sentiment_app_request_duration_seconds',
+    'Time spent processing requests',
+    ['endpoint']
+)
+
+@app.before_request
+def before_request():
+  request.start_time = time.time()
+  ACTIVE_USERS.inc()
+
+@app.after_request()
+def after_request(response):
+    REQUEST_COUNT.labels(
+        method=request.method,
+        endpoints=request.endpoint or 'unknown',
+        status_code=response.status_code
+    ).inc()
+
+    ACTIVE_USERS.dec()
+    duration = time.time() - request.start_time
+    REQUEST_DURATION.labels(endpoint=request.endpoint or 'unknown').observe(duration)
+
+    return response
+
+@app.route("/metrics")
+def metrics():
+    """Prometheus metrics endpoint"""
+    return generate_latest(), 200, {'Content-Type':CONTENT_TYPE_LATEST}
 
 
 @app.route("/", defaults={"path": ""})
