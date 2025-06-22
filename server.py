@@ -67,12 +67,24 @@ def update_metrics(response):
 
     return response
 
+
 app.after_request(update_metrics)
 
 
 @app.route("/metrics")
 def metrics():
-    """Prometheus metrics endpoint"""
+    """
+    Prometheus metrics endpoint
+    ---
+    description: Expose Prometheus metrics
+    responses:
+      200:
+        description: Prometheus metrics
+        content:
+          text/plain:
+            schema:
+              type: string
+    """
     return generate_latest(), 200, {"Content-Type": CONTENT_TYPE_LATEST}
 
 
