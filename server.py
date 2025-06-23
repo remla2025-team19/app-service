@@ -32,7 +32,11 @@ REQUEST_COUNT = Counter(
     ["method", "endpoint", "status_code"],
 )
 
-ACTIVE_USERS = Gauge("sentiment_app_active_users", "Number of currently active users")
+ACTIVE_USERS = Gauge(
+    "sentiment_app_active_users", 
+    "Number of currently active users",
+    ["endpoint"]  
+  )
 
 PREDICTION_REQUESTS = Counter(
     "sentiment_app_predictions_total",
@@ -50,7 +54,9 @@ REQUEST_DURATION = Histogram(
 def before_request():
     """Initialize metrics and track active users"""
     request.start_time = time.time()
-    ACTIVE_USERS.inc()
+    ACTIVE_USERS.labels(
+        endpoint = request.endpoint or "unknown"
+    ).inc()
 
 
 def update_metrics(response):
@@ -61,7 +67,9 @@ def update_metrics(response):
         status_code=response.status_code,
     ).inc()
 
-    ACTIVE_USERS.dec()
+    ACTIVE_USERS.labels(
+        endpoint = request.endpoint or "unknown"
+    ).dec()
     duration = time.time() - request.start_time
     REQUEST_DURATION.labels(endpoint=request.endpoint or "unknown").observe(duration)
 
