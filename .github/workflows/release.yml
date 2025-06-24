@@ -28,7 +28,7 @@ jobs:
             - name: Parse version info from tag
               run: |
                 # GITHUB_REF is like refs/tags/v2.3.5, so strip the first 11 chars
-                VERSION=${GITHUB_REF#refs/tags}
+                VERSION=${GITHUB_REF#refs/tags/}
 
                 # Check if this is a pre-release
                 if [[ "$VERSION" == *-pre* ]]; then
