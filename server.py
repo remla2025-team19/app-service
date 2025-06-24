@@ -14,11 +14,19 @@ from prometheus_client import (
 )
 import time
 from lib_version import VersionUtil
+from google.cloud import storage
+import json
 
 
 app = Flask(__name__)
 CORS(app)
 swagger = Swagger(app)
+
+feedback_stats = {
+    "total": 0,
+    "positive": 0,
+    "negative": 0
+}
 
 
 MODEL_SERVICE_URL = os.getenv("MODEL_SERVICE_URL")
@@ -96,6 +104,17 @@ def metrics():
     return generate_latest(), 200, {"Content-Type": CONTENT_TYPE_LATEST}
 
 
+def upload_feedback(feedback_text, filename="feedback.json"):
+    #client = storage.Client.from_service_account_json("remla_secret.json")
+    secret_path = os.getenv("GCP_SECRET_PATH")
+    if not secret_path:
+        raise ValueError("GCP_SECRET_PATH is not set")
+    client = storage.Client.from_service_account_json(secret_path)
+    bucket = client.bucket("remla2025-team19-bucket")
+    blob = bucket.blob(f"feedback/{filename}")
+    blob.upload_from_string(feedback_text)
+
+
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve_frontend(path):
@@ -133,6 +152,34 @@ def get_version():
         # TODO: fix this
         "modelServiceVersion": "0.0.1",
     }
+
+@app.route("/api/feedback", methods=["POST"])
+def receive_feedback():
+    data = request.get_json()
+    query = data.get("query")
+    feedback_value = data.get("feedback")  # expects 1 or 0
+
+    feedback_stats["total"] += 1
+    if feedback_value == 1:
+        feedback_stats["positive"] += 1
+    elif feedback_value == 0:
+        feedback_stats["negative"] += 1
+
+    print(f"Feedback received: {feedback_value} for query: \"{query}\"")
+    print("Updated feedback stats:", feedback_stats)
+
+    feedback_json = json.dumps(feedback_stats, indent=4)
+    try:
+        upload_feedback(feedback_json)
+    except Exception as e:
+        print(f"Error uploading feedback: {e}")
+        return jsonify({"status": "Error uploading feedback"}), 500
+
+    return jsonify({
+        "status": "Feedback received",
+        "current_stats": feedback_stats
+    }), 200
+
 
 
 @app.route("/api/query", methods=["POST"])
