@@ -5,6 +5,9 @@ on:
 jobs:
     build:
         runs-on: ubuntu-24.04
+        permissions:
+          contents: write
+          packages: write
         steps:
             - name: Checkout Repo
               uses: actions/checkout@v4
