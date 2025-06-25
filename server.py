@@ -113,7 +113,12 @@ def upload_feedback(feedback_text, filename="feedback.json"):
     client = storage.Client.from_service_account_json(secret_path)
     bucket = client.bucket("remla2025-team19-bucket")
     blob = bucket.blob(f"feedback/{filename}")
+    print(f"Uploading feedback to {blob.name} in bucket {bucket.name}")
     blob.upload_from_string(feedback_text)
+    print("Verifying upload contents...")
+    downloaded = blob.download_as_text()
+    print(f"Downloaded: {downloaded!r}")
+    print(f"Feedback uploaded to {blob.name} in bucket {bucket.name}")
 
 
 @app.route("/", defaults={"path": ""})
