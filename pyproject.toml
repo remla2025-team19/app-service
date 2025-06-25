@@ -15,4 +15,4 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-lib-version = { git = "https://github.com/remla2025-team19/lib-version", tag = "v0.0.9" }
+lib-version = { git = "https://github.com/remla2025-team19/lib-version", rev = "main" }
