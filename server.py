@@ -207,7 +207,7 @@ def query_model():
               type: string
     """
     assert MODEL_SERVICE_URL is not None, "MODEL_SERVICE_URL is not set"
-    review = request.get_json().get("review")
+    review = request.get_json().get("query")
     url = urllib.parse.urljoin(MODEL_SERVICE_URL, "predict")
     data = {"review": review}
     headers = {"Content-Type": "application/json"}
