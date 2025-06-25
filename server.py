@@ -109,6 +109,7 @@ def upload_feedback(feedback_text, filename="feedback.json"):
     secret_path = os.getenv("GCP_SECRET_PATH")
     if not secret_path:
         raise ValueError("GCP_SECRET_PATH is not set")
+    print(f"feedback_text: {feedback_text}")
     client = storage.Client.from_service_account_json(secret_path)
     bucket = client.bucket("remla2025-team19-bucket")
     blob = bucket.blob(f"feedback/{filename}")
