@@ -107,6 +107,7 @@ def metrics():
 def upload_feedback(feedback_text, filename="feedback.json"):
     #client = storage.Client.from_service_account_json("remla_secret.json")
     secret_path = os.getenv("GCP_SECRET_PATH")
+    print(f"Using GCP secret path: {secret_path}")
     if not secret_path:
         raise ValueError("GCP_SECRET_PATH is not set")
     print(f"feedback_text: {feedback_text}")
@@ -115,10 +116,6 @@ def upload_feedback(feedback_text, filename="feedback.json"):
     blob = bucket.blob(f"feedback/{filename}")
     print(f"Uploading feedback to {blob.name} in bucket {bucket.name}")
     blob.upload_from_string(feedback_text)
-    print("Verifying upload contents...")
-    downloaded = blob.download_as_text()
-    print(f"Downloaded: {downloaded!r}")
-    print(f"Feedback uploaded to {blob.name} in bucket {bucket.name}")
 
 
 @app.route("/", defaults={"path": ""})
