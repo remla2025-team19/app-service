@@ -22,11 +22,7 @@ app = Flask(__name__)
 CORS(app)
 swagger = Swagger(app)
 
-feedback_stats = {
-    "total": 0,
-    "positive": 0,
-    "negative": 0
-}
+feedback_stats = {"total": 0, "positive": 0, "negative": 0}
 
 
 MODEL_SERVICE_URL = os.getenv("MODEL_SERVICE_URL")
@@ -41,10 +37,8 @@ REQUEST_COUNT = Counter(
 )
 
 ACTIVE_USERS = Gauge(
-    "sentiment_app_active_users", 
-    "Number of currently active users",
-    ["endpoint"]  
-  )
+    "sentiment_app_active_users", "Number of currently active users", ["endpoint"]
+)
 
 PREDICTION_REQUESTS = Counter(
     "sentiment_app_predictions_total",
@@ -62,9 +56,7 @@ REQUEST_DURATION = Histogram(
 def before_request():
     """Initialize metrics and track active users"""
     request.start_time = time.time()
-    ACTIVE_USERS.labels(
-        endpoint = request.endpoint or "unknown"
-    ).inc()
+    ACTIVE_USERS.labels(endpoint=request.endpoint or "unknown").inc()
 
 
 def update_metrics(response):
@@ -75,9 +67,7 @@ def update_metrics(response):
         status_code=response.status_code,
     ).inc()
 
-    ACTIVE_USERS.labels(
-        endpoint = request.endpoint or "unknown"
-    ).dec()
+    ACTIVE_USERS.labels(endpoint=request.endpoint or "unknown").dec()
     duration = time.time() - request.start_time
     REQUEST_DURATION.labels(endpoint=request.endpoint or "unknown").observe(duration)
 
@@ -105,7 +95,7 @@ def metrics():
 
 
 def upload_feedback(feedback_text, filename="feedback.json"):
-    #client = storage.Client.from_service_account_json("remla_secret.json")
+    # client = storage.Client.from_service_account_json("remla_secret.json")
     secret_path = os.getenv("GCP_SECRET_PATH")
     print(f"Using GCP secret path: {secret_path}")
     if not secret_path:
@@ -144,17 +134,12 @@ def get_version():
               type: string
     """
 
-    # TODO: update url
-    # url = urllib.parse.urljoin(MODEL_SERVICE_URL, "api/version")
-    # response = requests.get(url)
-    # # TODO: update parameter
-    # model_service_version = response.json().get("version")
-    # TODO: import lib-version
     return {
-        "appVersion": VersionUtil.get_version(),
-        # TODO: fix this
-        "modelServiceVersion": "0.0.1",
+        "appVersion": os.getenv("APP_VERSION", "unknown"),
+        "modelServiceVersion": os.getenv("MODEL_SERVICE_VERSION", "unknown"),
+        "modelVersion": os.getenv("MODEL_VERSION", "unknown"),
     }
+
 
 @app.route("/api/feedback", methods=["POST"])
 def receive_feedback():
@@ -168,7 +153,7 @@ def receive_feedback():
     elif feedback_value == 0:
         feedback_stats["negative"] += 1
 
-    print(f"Feedback received: {feedback_value} for query: \"{query}\"")
+    print(f'Feedback received: {feedback_value} for query: "{query}"')
     print("Updated feedback stats:", feedback_stats)
 
     feedback_json = json.dumps(feedback_stats, indent=4)
@@ -178,11 +163,9 @@ def receive_feedback():
         print(f"Error uploading feedback: {e}")
         return jsonify({"status": "Error uploading feedback"}), 500
 
-    return jsonify({
-        "status": "Feedback received",
-        "current_stats": feedback_stats
-    }), 200
-
+    return jsonify(
+        {"status": "Feedback received", "current_stats": feedback_stats}
+    ), 200
 
 
 @app.route("/api/query", methods=["POST"])
