@@ -87,5 +87,5 @@ USER appuser
 
 # Expose the port and define the runtime command
 EXPOSE 8080
-ENTRYPOINT [ "python" ]
-CMD [ "server.py" ]
+ENTRYPOINT [ ]
+CMD [ "python", "server.py" ]
